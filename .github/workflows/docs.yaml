@@ -28,7 +28,6 @@ jobs:
               with:
                   repository: telarel/telarel
                   ref: main
-                  path: source
                   fetch-depth: 0
 
             - name: Install just
@@ -41,17 +40,15 @@ jobs:
                   auto-install: false
 
             - name: Install
-              working-directory: source
               run: just i
 
             - name: Build docs
-              working-directory: source
               run: just build-docs
 
             - name: Upload artifact
               uses: actions/upload-pages-artifact@v5
               with:
-                  path: source/docs/dist/public
+                  path: docs/dist/public
 
     # Deploy
     deploy:
