@@ -1,0 +1,71 @@
+name: Docs
+
+on:
+    repository_dispatch:
+        types:
+            - docs
+    workflow_dispatch:
+
+permissions:
+    contents: read
+    pages: write
+    id-token: write
+
+concurrency:
+    group: pages
+    cancel-in-progress: false
+
+jobs:
+    # Build
+    build:
+        name: Build
+
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout source
+              uses: actions/checkout@v7
+              with:
+                  repository: telarel/telarel
+                  ref: main
+                  path: source
+                  fetch-depth: 0
+
+            - name: Install just
+              uses: extractions/setup-just@v4
+
+            - name: Setup Node
+              uses: alpheusci/setup-node@v1
+              with:
+                  node-version: "24"
+                  auto-install: false
+
+            - name: Install
+              working-directory: source
+              run: just i
+
+            - name: Build docs
+              working-directory: source
+              run: just build-docs
+
+            - name: Upload artifact
+              uses: actions/upload-pages-artifact@v5
+              with:
+                  path: source/docs/dist/public
+
+    # Deploy
+    deploy:
+        name: Deploy
+
+        needs: build
+
+        runs-on: ubuntu-latest
+
+        environment:
+            name: github-pages
+            url: ${{ steps.deployment.outputs.page_url }}
+
+        steps:
+            - name: Deploy to GitHub Pages
+              id: deployment
+              uses: actions/deploy-pages@v5
